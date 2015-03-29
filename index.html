@@ -68,10 +68,10 @@
 					<form ng-repeat="eqn in equations track by $index" ng-submit="focused = false">
 						<div class="form-group has-feedback">
 							<div class="input-group">
-								<span class="input-group-addon">{{eqn.x}} {{eqn.o.sym}} {{eqn.y}} = </span>
+								<span class="input-group-addon">{{eqn.x}} {{operators[eqn.o].sym}} {{eqn.y}} = </span>
 								<input ng-model="eqn.a" ng-disabled="eqn.a && !focused && !$last" ng-focus="focused = true" ng-blur="focused = false; equations.push(equation())" tabindex="1" type="number" class="form-control" required />
 							</div>
-							<span ng-if="eqn.a" class="glyphicon glyphicon-{{eqn.a === eqn.o.fn(eqn.x, eqn.y) ? 'ok' : 'remove'}} form-control-feedback"></span>
+							<span ng-if="eqn.a" class="glyphicon glyphicon-{{eqn.a === operators[eqn.o].fn(eqn.x, eqn.y) ? 'ok' : 'remove'}} form-control-feedback"></span>
 						</div>
 					</form>
 				</div>
@@ -90,15 +90,15 @@
 					.controller('MainCtrl', function($scope) {
 						var random = function(max) { return Math.floor(Math.random() * (max || 100 + 1)); };
 
-						$scope.operators = angular.fromJson(localStorage.operators || [
-							{ sym: '+', fn: function add(a,b) { return a+b; }, use: true,  name: 'Addition'       },
-							{ sym: '-', fn: function sub(a,b) { return a-b; }, use: false, name: 'Subtraction'    },
-							{ sym: 'x', fn: function mul(a,b) { return a*b; }, use: false, name: 'Multiplication' },
-							{ sym: '/', fn: function div(a,b) { return a/b; }, use: false, name: 'Division'       }
+						$scope.operators = angular.extend(angular.fromJson(localStorage.operators || '[]'), [
+							{ sym: '+', fn: function(a,b) {return a+b;}, use: true,  name: 'Addition'       },
+							{ sym: '-', fn: function(a,b) {return a-b;}, use: false, name: 'Subtraction'    },
+							{ sym: 'x', fn: function(a,b) {return a*b;}, use: false, name: 'Multiplication' },
+							{ sym: '/', fn: function(a,b) {return a/b;}, use: false, name: 'Division'       }
 						]);
 						$scope.equation  = function() {
 							var x = random(), y = random(x), o = [];
-							for (var i = 0; i < $scope.operators.length; i++) if ($scope.operators[i].use) o.push($scope.operators[i]);
+							for (var i = 0; i < $scope.operators.length; i++) if ($scope.operators[i].use) o.push(i);
 							return { x: x, y: y, o: o[random(o.length)] };
 						}
 						$scope.equations = angular.fromJson(localStorage.equations || [$scope.equation()]);
