@@ -41,16 +41,16 @@
 						</div> -->
 						<div class="form-group">
 							<label>Select types of equations <span class="text-nowrap">you want to solve:</span></label>
-							<div class="checkbox" ng-repeat="operator in operators track by $index">
+							<div class="checkbox" ng-repeat="operator in operators | orderBy:'use':true track by $index">
 								<label><input ng-model="operator.use" type="checkbox" />{{operator.name}}</label>
 							</div>
 						</div>
 					</form>
-					<form ng-repeat="eqn in equations track by $index" ng-submit="eqn.valid = operators[eqn.o].fn(eqn.x, eqn.y); equations.push(equation())">
+					<form ng-repeat="eqn in equations track by $index" ng-submit="eqn.valid = eqn.answer === operators[eqn.o].fn(eqn.x, eqn.y); equations.push(equation())">
 						<div class="form-group has-feedback">
 							<div class="input-group">
 								<span class="input-group-addon">{{eqn.x}} {{operators[eqn.o].sym}} {{eqn.y}} = </span>
-								<input ng-model="eqn.answer" ng-disabled="answered" ng-focus="$last ? equations.push(equation()) : null" tabindex="1" ng-blur="eqn.valid = operators[eqn.o].fn(eqn.x, eqn.y)" type="number" class="form-control" required autofocus />
+								<input ng-model="eqn.answer" ng-disabled="eqn.answer && eqn.valid !== undefined" ng-focus="$last ? equations.push(equation()) : null" tabindex="1" ng-blur="eqn.valid = eqn.answer === operators[eqn.o].fn(eqn.x, eqn.y)" type="number" class="form-control" required autofocus />
 							</div>
 							<span ng-if="eqn.answer" class="glyphicon glyphicon-{{eqn.valid ? 'ok' : 'remove'}} form-control-feedback"></span>
 						</div>
@@ -66,20 +66,19 @@
 		<script src="js/main.js"></script>
 		<script type="text/javascript">
 			;( function ($, w, d, undefined) {
-				var operators = [
-									{ sym: '+', fn: function(a,b) {return a+b;}, use: true,  name: 'Addition'       },
-									{ sym: '-', fn: function(a,b) {return a-b;}, use: true,  name: 'Subtraction'    },
-									{ sym: 'x', fn: function(a,b) {return a*b;}, use: false, name: 'Multiplication' },
-									{ sym: '/', fn: function(a,b) {return a/b;}, use: false, name: 'Division'       }
-								],
-					random    = function(max) { return Math.floor(Math.random() * (max || 100 + 1)); };
 				angular
 					.module('vedic', [])
 					.controller('MainCtrl', function($scope) {
-						$scope.operators =	angular.extend(angular.fromJson(localStorage.vedic_Operators || '[]'), operators);
+						var random    	 =	function(max) { return Math.floor(Math.random() * (max || 100 + 1)); };
+						$scope.operators =	angular.extend([
+												{name:'Addition',       sym:'+', use:true,  fn:function(a,b){return a+b;}},
+												{name:'Subtraction',    sym:'-', use:true,  fn:function(a,b){return a-b;}},
+												{name:'Multiplication', sym:'x', use:false, fn:function(a,b){return a*b;}},
+												{name:'Division',       sym:'/', use:false, fn:function(a,b){return a/b;}}
+											], angular.fromJson(localStorage.vedic_Operators || '[]'));
 						$scope.equation  = 	function() {
 							var x = random(), y = random(x), o = [];
-							for (var i = 0; i < $scope.operators.length; i++) if ($scope.operators[i].use) o.push(i);
+							for (var i = 0; i < $scope.operators.length; i++) if($scope.operators[i].use) o.push(i);
 							return { x: x, y: y, o: o[random(o.length)] };
 						};
 						$scope.equations = 	angular.fromJson(localStorage.vedic_Equations || [$scope.equation()]);
