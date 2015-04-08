@@ -25,32 +25,13 @@
 		<script src="js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
 	</head>
 	<body ng-controller="MainCtrl">
-		<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-			<div class="container">
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-						<span class="sr-only">Toggle navigation</span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					</button>
-					<a class="navbar-brand" href="#">Vedic</a>
-				</div>
-				<div id="navbar" class="navbar-collapse collapse">
-					<form class="navbar-form navbar-right" role="form">
-						<div class="form-group">
-							<input type="text" placeholder="Email" class="form-control">
-						</div>
-						<div class="form-group">
-							<input type="password" placeholder="Password" class="form-control">
-						</div>
-						<button type="submit" class="btn btn-success">Sign in</button>
-					</form>
-				</div><!--/.navbar-collapse -->
-			</div>
-		</nav>
-
 		<div class="container">
+			<nav class="navbar navbar-inverse">
+				<a class="navbar-brand" href="#">Vedic</a>
+				<span class="pull-right">
+					<a class="btn glyphicon glyphicon-off" ng-click="reset()"></a>
+				</span>
+			</nav>
 			<div class="row">
 				<div class="col-sm-3">
 					<form>
@@ -65,13 +46,13 @@
 							</div>
 						</div>
 					</form>
-					<form ng-repeat="eqn in equations track by $index" ng-submit="focused = false">
+					<form ng-repeat="eqn in equations track by $index" ng-submit="eqn.valid = operators[eqn.o].fn(eqn.x, eqn.y); equations.push(equation())">
 						<div class="form-group has-feedback">
 							<div class="input-group">
 								<span class="input-group-addon">{{eqn.x}} {{operators[eqn.o].sym}} {{eqn.y}} = </span>
-								<input ng-model="eqn.a" ng-disabled="eqn.a && !focused && !$last" ng-focus="focused = true" ng-blur="focused = false; equations.push(equation())" tabindex="1" type="number" class="form-control" required />
+								<input ng-model="eqn.answer" ng-disabled="answered" tabindex="1" type="number" class="form-control" required autofocus />
 							</div>
-							<span ng-if="eqn.a" class="glyphicon glyphicon-{{eqn.a === operators[eqn.o].fn(eqn.x, eqn.y) ? 'ok' : 'remove'}} form-control-feedback"></span>
+							<span ng-if="eqn.answer" class="glyphicon glyphicon-{{eqn.valid ? 'ok' : 'remove'}} form-control-feedback"></span>
 						</div>
 					</form>
 				</div>
@@ -85,25 +66,30 @@
 		<script src="js/main.js"></script>
 		<script type="text/javascript">
 			;( function ($, w, d, undefined) {
+				var operators = [
+									{ sym: '+', fn: function(a,b) {return a+b;}, use: true,  name: 'Addition'       },
+									{ sym: '-', fn: function(a,b) {return a-b;}, use: true,  name: 'Subtraction'    },
+									{ sym: 'x', fn: function(a,b) {return a*b;}, use: false, name: 'Multiplication' },
+									{ sym: '/', fn: function(a,b) {return a/b;}, use: false, name: 'Division'       }
+								],
+					random    = function(max) { return Math.floor(Math.random() * (max || 100 + 1)); };
 				angular
 					.module('vedic', [])
 					.controller('MainCtrl', function($scope) {
-						var random = function(max) { return Math.floor(Math.random() * (max || 100 + 1)); };
-
-						$scope.operators = angular.extend(angular.fromJson(localStorage.operators || '[]'), [
-							{ sym: '+', fn: function(a,b) {return a+b;}, use: true,  name: 'Addition'       },
-							{ sym: '-', fn: function(a,b) {return a-b;}, use: false, name: 'Subtraction'    },
-							{ sym: 'x', fn: function(a,b) {return a*b;}, use: false, name: 'Multiplication' },
-							{ sym: '/', fn: function(a,b) {return a/b;}, use: false, name: 'Division'       }
-						]);
-						$scope.equation  = function() {
+						$scope.operators =	angular.extend(angular.fromJson(localStorage.vedic_Operators || '[]'), operators);
+						$scope.equation  = 	function() {
 							var x = random(), y = random(x), o = [];
 							for (var i = 0; i < $scope.operators.length; i++) if ($scope.operators[i].use) o.push(i);
 							return { x: x, y: y, o: o[random(o.length)] };
-						}
-						$scope.equations = angular.fromJson(localStorage.equations || [$scope.equation()]);
+						};
+						$scope.equations = 	angular.fromJson(localStorage.vedic_Equations || [$scope.equation()]);
+						$scope.reset 	 = 	function() {
+												delete localStorage.vedic_Operators;
+												delete localStorage.vedic_Equations;
+												location.reload();
+											};
 						$scope.$watch('[operators, equations]', function (newVal, oldVal) {
-                        	angular.extend(localStorage, { operators: angular.toJson(newVal[0]), equations: angular.toJson(newVal[1]) });
+                        	angular.extend(localStorage, { vedic_Operators: angular.toJson(newVal[0]), vedic_Equations: angular.toJson(newVal[1]) });
                         }, true);
 					});
 			})(jQuery,window,document);
