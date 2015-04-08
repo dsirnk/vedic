@@ -50,7 +50,7 @@
 						<div class="form-group has-feedback">
 							<div class="input-group">
 								<span class="input-group-addon">{{eqn.x}} {{operators[eqn.o].sym}} {{eqn.y}} = </span>
-								<input ng-model="eqn.answer" ng-disabled="answered" ng-focus="$last ? operators[eqn.o].fn(eqn.x, eqn.y); equations.push(equation()) : null" tabindex="1" type="number" class="form-control" required autofocus />
+								<input ng-model="eqn.answer" ng-disabled="answered" ng-focus="$last ? equations.push(equation()) : null" tabindex="1" type="number" class="form-control" required autofocus />
 							</div>
 							<span ng-if="eqn.answer" class="glyphicon glyphicon-{{eqn.valid ? 'ok' : 'remove'}} form-control-feedback"></span>
 						</div>
